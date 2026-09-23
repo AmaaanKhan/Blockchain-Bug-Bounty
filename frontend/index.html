@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Bug Bounty</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Blockchain Bug Bounty</h1>
+        <p class="subtitle">
+            Decentralized vulnerability reporting and bounty management
+        </p>
+
+        <section>
+            <h2>Create Bounty</h2>
+
+            <input
+                id="bountyTitle"
+                type="text"
+                placeholder="Bounty title"
+            >
+
+            <textarea
+                id="bountyDescription"
+                placeholder="Bounty description"
+            ></textarea>
+
+            <input
+                id="bountyReward"
+                type="number"
+                placeholder="Reward in ETH"
+                step="0.01"
+            >
+
+            <button id="createBounty">
+                Create Bounty
+            </button>
+        </section>
+
+
+        <section>
+            <h2>Submit Vulnerability Report</h2>
+
+            <input
+                id="bountyId"
+                type="number"
+                placeholder="Bounty ID"
+            >
+
+            <input
+                id="reportHash"
+                type="text"
+                placeholder="Report hash"
+            >
+
+            <button id="submitReport">
+                Submit Report
+            </button>
+        </section>
+
+
+        <section>
+            <h2>Resolve Bounty</h2>
+
+            <input
+                id="resolveBountyId"
+                type="number"
+                placeholder="Bounty ID"
+            >
+
+            <button id="acceptBounty">
+                Accept Report
+            </button>
+
+            <button id="rejectBounty">
+                Reject Report
+            </button>
+        </section>
+
+
+        <section>
+            <h2>View Bounty</h2>
+
+            <input
+                id="viewBountyId"
+                type="number"
+                placeholder="Bounty ID"
+            >
+
+            <button id="viewBounty">
+                View Bounty
+            </button>
+
+            <pre id="bountyResult"></pre>
+        </section>
+
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+</html>

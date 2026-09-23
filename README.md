@@ -57,15 +57,23 @@ The complete bounty lifecycle has been tested using Remix VM:
 4. The bounty is marked as resolved.
 5. The reward is transferred to the researcher.
 
-## Running
+## Running/Screenshots
 
-1. Open Remix IDE.
-2. Open `contracts/BugBounty.sol`.
-3. Compile using a compatible Solidity `0.8.x` compiler.
-4. Open **Deploy & Run Transactions**.
-5. Select Remix VM or another local development blockchain.
-6. Deploy the contract.
-7. Test the bounty lifecycle using separate accounts.
+CREATE BOUNTY
+<img width="1907" height="1012" alt="Screenshot 2026-09-23 060014" src="https://github.com/user-attachments/assets/dd7829e9-3fd1-4443-b0f1-5a8668b2f89b" />
+
+SET REWARD
+<img width="1917" height="1017" alt="Screenshot 2026-09-23 055947" src="https://github.com/user-attachments/assets/29d79193-dc98-4098-b2bf-017249e83510" />
+
+SUBMIT SOLUTION
+<img width="1917" height="1016" alt="Screenshot 2026-09-23 060535" src="https://github.com/user-attachments/assets/c1e8c472-6aea-460f-8cd4-247659be5252" />
+
+ACCEPT SOLUTION (WILL RELEASE REWARD)
+<img width="1916" height="1010" alt="Screenshot 2026-09-23 060906" src="https://github.com/user-attachments/assets/7d7e912f-50cc-47dd-9f3f-39503d117fd1" />
+
+ACCOUNT BALANCE 94.99 (-5) AFTER RELEASING PAYMENT
+<img width="1917" height="1017" alt="Screenshot 2026-09-23 060302" src="https://github.com/user-attachments/assets/2a71f7f2-92e3-418e-944a-bbd96d758492" />
+
 
 ## Project Structure
 

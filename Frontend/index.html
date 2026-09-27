@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BugShield — On-chain bug bounties</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#03050a;
+  --bg-raised:#080b14;
+  --bg-inset:#05070e;
+  --line:rgba(150,170,210,.12);
+  --line-soft:rgba(150,170,210,.07);
+  --text:#eef1f7;
+  --muted:#99a2b8;
+  --muted-dim:#6d7590;
+  --amber:#5b8cff;
+  --amber-dim:rgba(91,140,255,.14);
+  --violet:#8b7bff;
+  --teal:#63d9c4;
+  --red:#ff6b5e;
+  --sans:'Inter',ui-sans-serif,system-ui,sans-serif;
+  --display:'Space Grotesk',var(--sans);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(60,90,160,.10), transparent 45%),
+    radial-gradient(circle at 100% 30%, rgba(40,70,140,.08), transparent 40%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(240px circle at 0% 0%,rgba(210,220,242,.09),transparent 70%),radial-gradient(240px circle at 100% 0%,rgba(210,220,242,.09),transparent 70%),radial-gradient(240px circle at 0% 100%,rgba(190,202,226,.07),transparent 70%),radial-gradient(240px circle at 100% 100%,rgba(210,220,242,.09),transparent 70%);animation:corner-breathe 7s ease-in-out infinite;}
+@keyframes corner-breathe{0%,100%{opacity:.7;}50%{opacity:1;}}
+::selection{background:rgba(91,140,255,.35);color:#fff;}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:rgba(91,140,255,.25);border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(91,140,255,.4);}
+a{color:inherit;}
+img{max-width:100%;}
+
+.wrap{width:min(1180px,calc(100% - 48px));margin:0 auto;}
+
+/* ---------- nav ---------- */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 0;
+  border-bottom:1px solid var(--line-soft);
+}
+.nav-links{display:flex;align-items:center;gap:28px;font-size:14px;color:var(--muted);}
+.nav-links a{text-decoration:none;transition:color .2s ease;}
+.nav-links a:hover{color:var(--text);}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.brand-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--amber);
+  display:grid;place-items:center;
+  color:#0a0a09;font-weight:700;font-family:var(--display);font-size:15px;
+}
+.brand-word{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:-.2px;}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:10px;border:1px solid transparent;
+  padding:12px 20px;font-size:14px;font-weight:600;font-family:var(--sans);
+  cursor:pointer;text-decoration:none;
+  transition:transform .15s cubic-bezier(.2,.8,.2,1),filter .15s ease,background .2s ease,border-color .2s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-amber{background:var(--amber);color:#050912;}
+.btn-amber:hover{filter:brightness(1.12);}
+.btn-line{background:transparent;border-color:var(--line);color:var(--text);}
+.btn-line:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.03);}
+.btn-quiet{background:transparent;color:var(--muted);padding:12px 6px;}
+.btn-quiet:hover{color:var(--text);}
+.btn-sm{padding:8px 13px;font-size:12.5px;border-radius:8px;}
+.btn-block{width:100%;}
+
+/* ---------- pills / tags ---------- */
+.pill{
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--line);border-radius:999px;
+  padding:7px 12px;font-size:12px;color:var(--muted);font-family:var(--mono);
+}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--muted-dim);}
+.pill-dot.live{background:var(--teal);box-shadow:0 0 0 3px rgba(99,217,196,.15);}
+
+.tag{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:7px;font-size:11px;font-weight:500;
+  font-family:var(--mono);border:1px solid var(--line);color:var(--muted);
+}
+.tag.open{color:var(--teal);border-color:rgba(99,217,196,.3);}
+.tag.submitted{color:var(--amber);border-color:rgba(91,140,255,.35);}
+.tag.resolved{color:var(--muted);border-color:var(--line);}
+
+/* ---------- section rhythm ---------- */
+section{padding:52px 0;}
+.eyebrow{
+  font-family:var(--mono);font-size:12.5px;color:var(--muted);
+  margin:0 0 10px;
+}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.5px;}
+.section-head{max-width:640px;margin-bottom:30px;}
+.section-head h2{font-size:clamp(26px,3.4vw,38px);line-height:1.12;}
+.section-head p{color:var(--muted);font-size:15.5px;margin-top:14px;max-width:520px;}
+
+hr.rule{border:0;border-top:1px solid var(--line-soft);margin:0;}
+
+/* ---------- next-step nav card ---------- */
+.next-step{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  border:1px solid var(--line);border-radius:16px;padding:28px 32px;
+  text-decoration:none;color:var(--text);background:var(--bg-raised);
+  position:relative;overflow:hidden;
+  transition:border-color .3s ease,transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease;
+}
+.next-step::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(91,140,255,.14),transparent 60%);
+  opacity:0;transition:opacity .35s ease;pointer-events:none;
+}
+.next-step:hover{border-color:rgba(91,140,255,.4);transform:translateY(-3px);box-shadow:0 22px 46px -20px rgba(91,140,255,.4);}
+.next-step:hover::before{opacity:1;}
+.ns-left{position:relative;z-index:1;}
+.ns-eyebrow{font-family:var(--mono);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.ns-eyebrow .ns-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 3px rgba(91,140,255,.18);}
+.ns-title{font-family:var(--display);font-size:clamp(19px,2.6vw,26px);margin-top:8px;letter-spacing:-.3px;}
+.ns-title span{color:var(--muted);font-weight:400;}
+.ns-arrow{
+  position:relative;z-index:1;flex:none;
+  width:48px;height:48px;border-radius:50%;
+  border:1px solid var(--line);display:grid;place-items:center;
+  font-size:18px;color:var(--text);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s ease,color .3s ease,border-color .3s ease;
+}
+.next-step:hover .ns-arrow{
+  transform:translateX(6px);
+  background:var(--amber);color:#050912;border-color:transparent;
+}
+@media (max-width:600px){
+  .next-step{padding:22px;flex-wrap:wrap;}
+}
+
+.foot{
+  border-top:1px solid var(--line-soft);
+  padding:34px 0;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
+  color:var(--muted-dim);font-size:12.5px;
+}
+.foot a{color:var(--muted);text-decoration:none;}
+.foot a:hover{color:var(--text);}
+
+/* ---------- reveal-on-load ---------- */
+.rise{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.16,1,.3,1) forwards;}
+@keyframes rise{to{opacity:1;transform:none;}}
+
+@media (max-width:760px){
+  section{padding:36px 0;}
+  .nav-links{display:none;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important;}
+}
+
+</style>
+<style>
+  .hero{padding:56px 0 36px;display:grid;grid-template-columns:1.15fr .85fr;gap:36px;align-items:center;}
+  .hero h1{font-size:clamp(40px,5.6vw,68px);line-height:1.02;max-width:620px;}
+  .hero-title{position:relative;}
+  .hero-title.typing::after{content:"";display:inline-block;width:2px;height:.78em;margin-left:5px;vertical-align:-.05em;background:var(--amber);opacity:.7;animation:caret-blink 1s ease-in-out infinite;}
+  .hero-title .type-line{display:inline;}
+  .hero-title .type-line.muted{color:var(--muted);font-weight:400;}
+  @keyframes caret-blink{0%,45%{opacity:.65}50%,100%{opacity:0}}
+  .hero p.lede{color:var(--muted);font-size:17px;max-width:460px;margin:16px 0 22px;line-height:1.6;}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;}
+  .hero-actions .btn,
+  .cta-band .btn{
+    padding:16px 28px;font-size:15.5px;border-radius:12px;
+    transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,filter .25s ease;
+  }
+  .hero-actions .btn-amber,
+  .cta-band .btn-amber{
+    box-shadow:0 0 0 rgba(91,140,255,0);
+    animation:btn-glow 3.2s ease-in-out infinite;
+  }
+  .hero-actions .btn-amber:hover,
+  .cta-band .btn-amber:hover{
+    transform:translateY(-3px) scale(1.03);
+    box-shadow:0 12px 34px -6px rgba(91,140,255,.65);
+  }
+  .hero-actions .btn-line:hover,
+  .cta-band .btn-line:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 28px -8px rgba(150,170,210,.25);
+    border-color:rgba(150,170,210,.4);
+  }
+  @keyframes btn-glow{
+    0%,100%{box-shadow:0 0 16px -4px rgba(91,140,255,.35);}
+    50%{box-shadow:0 0 30px -2px rgba(91,140,255,.65);}
+  }
+  .req-note{margin-top:22px;color:var(--muted-dim);font-size:12.5px;font-family:var(--mono);}
+
+  .terminal{
+    border:1px solid var(--line);border-radius:14px;background:var(--bg-raised);
+    overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.55), 0 0 60px -20px rgba(91,140,255,.35);
+    animation:float 5s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;padding:12px 14px;border-bottom:1px solid var(--line-soft);
+  }
+  .terminal-bar span{width:9px;height:9px;border-radius:50%;background:var(--line);}
+  .terminal-bar small{margin-left:8px;color:var(--muted-dim);font-family:var(--mono);font-size:11px;}
+  .terminal-body{padding:22px 20px 26px;font-family:var(--mono);font-size:13px;min-height:230px;}
+  .t-line{color:var(--muted-dim);opacity:0;white-space:pre-wrap;line-height:1.9;}
+  .t-line .k{color:var(--amber);}
+  .t-line .v{color:var(--teal);}
+  .t-cursor{display:inline-block;width:7px;height:14px;background:var(--amber);margin-left:2px;vertical-align:-2px;animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  .feat{position:relative;overflow:hidden;border-radius:14px;padding:22px 24px;margin-top:10px;background:linear-gradient(#0a0e1a,#0a0e1a) padding-box,linear-gradient(135deg,rgba(91,140,255,.65),rgba(46,255,158,.5),rgba(139,123,255,.65)) border-box;border:1px solid transparent;box-shadow:0 0 34px -10px rgba(91,140,255,.5);transition:transform .3s ease,box-shadow .3s ease;}
+  .feat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);display:inline-block;margin-right:6px;box-shadow:0 0 10px 2px rgba(46,255,158,.7);animation:pill-blink 2.2s ease-in-out infinite;}
+  @keyframes pill-blink{0%,100%{opacity:1;}50%{opacity:.55;}}
+  .feat h4{margin:0 0 6px;font-size:22px;}
+  .feat p{margin:0 0 14px;color:var(--muted);font-size:13.5px;}
+  .feat-reward{font-family:var(--mono);color:var(--teal);font-weight:600;}
+  .feat-foot{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+  .feat-foot a{color:var(--text);text-decoration:none;font-weight:600;}
+  .feat-foot a:hover{color:var(--amber);}
+  .feat-shine{position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.09),transparent);animation:shine 4.5s ease-in-out infinite;pointer-events:none;}
+  @keyframes shine{0%{left:-60%;}55%,100%{left:130%;}}
+  .feat:hover{transform:perspective(1000px) rotateX(2deg) translateY(-3px);box-shadow:0 0 44px -8px rgba(91,140,255,.6);}
+
+  .lifecycle{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .life-step{padding:20px 18px;border-right:1px solid var(--line);position:relative;transition:background .25s ease,transform .25s ease;}
+  .life-step:hover{background:rgba(91,140,255,.05);transform:translateY(-3px);}
+  .life-step:last-child{border-right:none;}
+  .life-num{font-family:var(--mono);color:var(--muted-dim);font-size:12px;}
+  .life-step h3{font-size:16px;margin:9px 0 6px;font-family:var(--display);font-weight:600;}
+  .life-step p{color:var(--muted);font-size:13px;line-height:1.55;margin:0;}
+  .life-step .who{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--amber);}
+
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .role-card{border:1px solid var(--line);border-radius:14px;padding:20px;background:var(--bg-raised);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;}
+  .role-card:hover{transform:translateY(-4px);border-color:rgba(91,140,255,.35);box-shadow:0 16px 34px -14px rgba(91,140,255,.35);}
+  .role-card h3{font-size:18px;margin-bottom:8px;}
+  .role-card p{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 12px;}
+  .role-card ul{margin:0;padding-left:18px;color:var(--muted);font-size:13.5px;line-height:1.75;}
+  .role-card ul li::marker{color:var(--amber);}
+
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr;padding-top:56px;}
+    .lifecycle{grid-template-columns:1fr 1fr;}
+    .life-step{border-bottom:1px solid var(--line);}
+    .roles{grid-template-columns:1fr;}
+  }
+  .glow{position:fixed;border-radius:50%;filter:blur(110px);z-index:-1;pointer-events:none;animation:pulse 9s ease-in-out infinite;}
+  .glow-a{width:560px;height:560px;top:-180px;left:-120px;background:rgba(91,140,255,.20);}
+  .glow-b{width:520px;height:520px;top:120px;right:-160px;background:rgba(139,123,255,.16);animation-delay:-4.5s;}
+  @keyframes pulse{0%,100%{opacity:.55;transform:scale(1);}50%{opacity:.9;transform:scale(1.08);}}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);}
+  .reveal.in{opacity:1;transform:none;}
+</style>
+</head>
+<body>
+<div class="glow glow-a"></div>
+<div class="glow glow-b"></div>
+<div class="wrap">
+  <nav class="nav">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">B</span>
+      <span class="brand-word">BugShield</span>
+    </a>
+    <div class="nav-links">
+      <a href="how-it-works.html">How it works</a>
+      <a href="app.html">Launch app</a>
+    </div>
+    <a class="btn btn-line btn-sm" href="app.html">Launch app</a>
+  </nav>
+
+  <section class="hero">
+    <div class="rise" style="animation-delay:.05s">
+      <p class="eyebrow">Solidity · Sepolia testnet</p>
+      <h1 class="hero-title" aria-label="A bounty the contract pays out, not a promise.">A bounty the contract pays out<br>not a promise.</h1>
+      <p class="lede">Organizations lock an ETH reward inside a smart contract. Researchers submit proof of a vulnerability. The reward only moves when the organization accepts it, on chain, with no escrow middleman.</p>
+      <div class="hero-actions">
+        <a class="btn btn-amber" href="app.html">Connect &amp; launch app</a>
+        <a class="btn btn-line" href="how-it-works.html">See how it works</a>
+      </div>
+      <p class="req-note">Requires MetaMask on Sepolia (chain ID 11155111)</p>
+    </div>
+
+    <div class="hero-right">
+      <div class="terminal rise" style="animation-delay:.15s">
+        <div class="terminal-bar"><span></span><span></span><span></span><small>BugBounty.sol</small></div>
+        <div class="terminal-body" id="termBody"></div>
+      </div>
+      <div class="feat rise" style="animation-delay:.25s">
+        <span class="feat-shine"></span>
+        <div class="feat-top">
+          <span class="tag open"><span class="live-dot"></span>Open</span>
+          <span class="feat-reward">0.5 ETH</span>
+        </div>
+        <h4>Reentrancy in withdraw()</h4>
+        <p>Audit the vault staking flow — reward auto-pays on accept.</p>
+        <div class="feat-foot">
+          <span>Bounty #004 · Sepolia</span>
+          <a href="app.html">Hunt this bounty →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head reveal">
+      <p class="eyebrow">Lifecycle</p>
+      <h2>Four steps, each one a transaction.</h2>
+      <p>Every bounty moves through the same on-chain path — nothing is settled off-chain or by admin override.</p>
+    </div>
+    <div class="lifecycle">
+      <div class="life-step reveal">
+        <span class="life-num">01</span>
+        <h3>Create</h3>
+        <p>An organization opens a bounty with a title and a vulnerability description, locking the ETH reward in <code>createBounty()</code>.</p>
+        <span class="who">Organization</span>
+      </div>
+      <div class="life-step reveal">
+        <span class="life-num">02</span>
+        <h3>Report</h3>
+        <p>A researcher calls <code>submitReport()</code> with a hash of their findings — the evidence stays off-chain, the hash doesn't.</p>
+        <span class="who">Researcher</span>
+      </div>
+      <div class="life-step reveal">
+        <span class="life-num">03</span>
+        <h3>Resolve</h3>
+        <p>The organization calls <code>resolveBounty()</code> to accept or reject the report. Only they can close their own bounty.</p>
+        <span class="who">Organization</span>
+      </div>
+      <div class="life-step reveal">
+        <span class="life-num">04</span>
+        <h3>Settle</h3>
+        <p>Accepting a report releases the locked reward straight to the researcher's wallet in the same transaction.</p>
+        <span class="who">Contract</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head reveal">
+      <p class="eyebrow">Two sides</p>
+      <h2>Built around who's actually using it.</h2>
+    </div>
+    <div class="roles">
+      <div class="role-card reveal">
+        <h3>Running a bounty program</h3>
+        <p>Post a scope, back it with ETH, and only pay out when you're satisfied.</p>
+        <ul>
+          <li>Reward is escrowed the moment you create the bounty</li>
+          <li>You decide whether a report is accepted</li>
+          <li>Every bounty you own is resolvable only by you</li>
+        </ul>
+      </div>
+      <div class="role-card reveal">
+        <h3>Hunting for bugs</h3>
+        <p>Find something real, submit proof, get paid the moment it's accepted.</p>
+        <ul>
+          <li>Browse every open bounty and its reward</li>
+          <li>Submit a report hash against any open bounty</li>
+          <li>Reward lands in your wallet the instant it's accepted</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
+    <a class="next-step" href="how-it-works.html" id="nextStep">
+      <div class="ns-left">
+        <p class="ns-eyebrow"><span class="ns-dot"></span>Next step</p>
+        <h3 class="ns-title">How it works <span>— every function, explained</span></h3>
+      </div>
+      <span class="ns-arrow">→</span>
+    </a>
+  </section>
+
+  <div class="foot">
+    <span>BugShield — Solidity + Ethereum + MetaMask</span>
+    <span><a href="how-it-works.html">How it works</a> · <a href="app.html">Launch app</a></span>
+  </div>
+</div>
+
+<script>
+  document.getElementById("nextStep").addEventListener("mousemove", (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    e.currentTarget.style.setProperty("--my", (e.clientY - r.top) + "px");
+  });
+</script>
+
+<script>
+  const lines = [
+    { k: "org.createBounty", v: '"Reentrancy in withdraw()"  +0.05 ETH' },
+    { k: "researcher.submitReport", v: "#4  0xa11c...9f2e" },
+    { k: "org.resolveBounty", v: "#4  accepted → true" },
+    { k: "contract.transfer", v: "0.05 ETH → researcher" },
+  ];
+  const body = document.getElementById("termBody");
+  let delay = 150;
+  lines.forEach((line, i) => {
+    const el = document.createElement("div");
+    el.className = "t-line";
+    el.style.animation = `rise .5s cubic-bezier(.16,1,.3,1) forwards`;
+    el.style.animationDelay = delay + "ms";
+    el.innerHTML = `<span class="k">${line.k}</span>(<span class="v">${line.v}</span>)`;
+    body.appendChild(el);
+    delay += 480;
+  });
+  setTimeout(() => {
+    const cur = document.createElement("span");
+    cur.className = "t-cursor";
+    body.appendChild(cur);
+  }, delay);
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll(".reveal").forEach((el, i) => {
+    el.style.transitionDelay = (i % 4) * 60 + "ms";
+    io.observe(el);
+  });
+</script>
+
+<script>
+(() => {
+  const title = document.querySelector('.hero-title');
+  if (!title) return;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return;
+  const full = 'A bounty the contract pays out';
+  const second = 'not a promise.';
+  title.classList.add('typing');
+  title.innerHTML = '<span class="type-line"></span><br><span class="type-line muted"></span>';
+  const lines = title.querySelectorAll('.type-line');
+  let i = 0;
+  const type = (el, text, done) => {
+    if (i >= text.length) { done(); return; }
+    el.textContent += text[i++];
+    setTimeout(() => type(el, text, done), 34);
+  };
+  type(lines[0], full, () => {
+    i = 0;
+    setTimeout(() => type(lines[1], second, () => {
+      setTimeout(() => title.classList.remove('typing'), 650);
+    }), 180);
+  });
+})();
+</script>
+</body>
+</html>

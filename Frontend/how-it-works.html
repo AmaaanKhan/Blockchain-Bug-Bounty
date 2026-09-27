@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How it works — BugShield</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#03050a;
+  --bg-raised:#080b14;
+  --bg-inset:#05070e;
+  --line:rgba(150,170,210,.12);
+  --line-soft:rgba(150,170,210,.07);
+  --text:#eef1f7;
+  --muted:#99a2b8;
+  --muted-dim:#6d7590;
+  --amber:#5b8cff;
+  --amber-dim:rgba(91,140,255,.14);
+  --violet:#8b7bff;
+  --teal:#63d9c4;
+  --red:#ff6b5e;
+  --sans:'Inter',ui-sans-serif,system-ui,sans-serif;
+  --display:'Space Grotesk',var(--sans);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(60,90,160,.10), transparent 45%),
+    radial-gradient(circle at 100% 30%, rgba(40,70,140,.08), transparent 40%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(240px circle at 0% 0%,rgba(210,220,242,.09),transparent 70%),radial-gradient(240px circle at 100% 0%,rgba(210,220,242,.09),transparent 70%),radial-gradient(240px circle at 0% 100%,rgba(190,202,226,.07),transparent 70%),radial-gradient(240px circle at 100% 100%,rgba(210,220,242,.09),transparent 70%);animation:corner-breathe 7s ease-in-out infinite;}
+@keyframes corner-breathe{0%,100%{opacity:.7;}50%{opacity:1;}}
+::selection{background:rgba(91,140,255,.35);color:#fff;}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:rgba(91,140,255,.25);border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(91,140,255,.4);}
+a{color:inherit;}
+img{max-width:100%;}
+
+.wrap{width:min(1180px,calc(100% - 48px));margin:0 auto;}
+
+/* ---------- nav ---------- */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 0;
+  border-bottom:1px solid var(--line-soft);
+}
+.nav-links{display:flex;align-items:center;gap:28px;font-size:14px;color:var(--muted);}
+.nav-links a{text-decoration:none;transition:color .2s ease;}
+.nav-links a:hover{color:var(--text);}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.brand-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--amber);
+  display:grid;place-items:center;
+  color:#0a0a09;font-weight:700;font-family:var(--display);font-size:15px;
+}
+.brand-word{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:-.2px;}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:10px;border:1px solid transparent;
+  padding:12px 20px;font-size:14px;font-weight:600;font-family:var(--sans);
+  cursor:pointer;text-decoration:none;
+  transition:transform .15s cubic-bezier(.2,.8,.2,1),filter .15s ease,background .2s ease,border-color .2s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-amber{background:var(--amber);color:#050912;}
+.btn-amber:hover{filter:brightness(1.12);}
+.btn-line{background:transparent;border-color:var(--line);color:var(--text);}
+.btn-line:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.03);}
+.btn-quiet{background:transparent;color:var(--muted);padding:12px 6px;}
+.btn-quiet:hover{color:var(--text);}
+.btn-sm{padding:8px 13px;font-size:12.5px;border-radius:8px;}
+.btn-block{width:100%;}
+
+/* ---------- pills / tags ---------- */
+.pill{
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--line);border-radius:999px;
+  padding:7px 12px;font-size:12px;color:var(--muted);font-family:var(--mono);
+}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--muted-dim);}
+.pill-dot.live{background:var(--teal);box-shadow:0 0 0 3px rgba(99,217,196,.15);}
+
+.tag{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:7px;font-size:11px;font-weight:500;
+  font-family:var(--mono);border:1px solid var(--line);color:var(--muted);
+}
+.tag.open{color:var(--teal);border-color:rgba(99,217,196,.3);}
+.tag.submitted{color:var(--amber);border-color:rgba(91,140,255,.35);}
+.tag.resolved{color:var(--muted);border-color:var(--line);}
+
+/* ---------- section rhythm ---------- */
+section{padding:52px 0;}
+.eyebrow{
+  font-family:var(--mono);font-size:12.5px;color:var(--muted);
+  margin:0 0 10px;
+}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.5px;}
+.section-head{max-width:640px;margin-bottom:30px;}
+.section-head h2{font-size:clamp(26px,3.4vw,38px);line-height:1.12;}
+.section-head p{color:var(--muted);font-size:15.5px;margin-top:14px;max-width:520px;}
+
+hr.rule{border:0;border-top:1px solid var(--line-soft);margin:0;}
+
+/* ---------- next-step nav card ---------- */
+.next-step{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  border:1px solid var(--line);border-radius:16px;padding:28px 32px;
+  text-decoration:none;color:var(--text);background:var(--bg-raised);
+  position:relative;overflow:hidden;
+  transition:border-color .3s ease,transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease;
+}
+.next-step::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(91,140,255,.14),transparent 60%);
+  opacity:0;transition:opacity .35s ease;pointer-events:none;
+}
+.next-step:hover{border-color:rgba(91,140,255,.4);transform:translateY(-3px);box-shadow:0 22px 46px -20px rgba(91,140,255,.4);}
+.next-step:hover::before{opacity:1;}
+.ns-left{position:relative;z-index:1;}
+.ns-eyebrow{font-family:var(--mono);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.ns-eyebrow .ns-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 3px rgba(91,140,255,.18);}
+.ns-title{font-family:var(--display);font-size:clamp(19px,2.6vw,26px);margin-top:8px;letter-spacing:-.3px;}
+.ns-title span{color:var(--muted);font-weight:400;}
+.ns-arrow{
+  position:relative;z-index:1;flex:none;
+  width:48px;height:48px;border-radius:50%;
+  border:1px solid var(--line);display:grid;place-items:center;
+  font-size:18px;color:var(--text);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s ease,color .3s ease,border-color .3s ease;
+}
+.next-step:hover .ns-arrow{
+  transform:translateX(6px);
+  background:var(--amber);color:#050912;border-color:transparent;
+}
+@media (max-width:600px){
+  .next-step{padding:22px;flex-wrap:wrap;}
+}
+
+.foot{
+  border-top:1px solid var(--line-soft);
+  padding:34px 0;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
+  color:var(--muted-dim);font-size:12.5px;
+}
+.foot a{color:var(--muted);text-decoration:none;}
+.foot a:hover{color:var(--text);}
+
+/* ---------- reveal-on-load ---------- */
+.rise{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.16,1,.3,1) forwards;}
+@keyframes rise{to{opacity:1;transform:none;}}
+
+@media (max-width:760px){
+  section{padding:36px 0;}
+  .nav-links{display:none;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important;}
+}
+
+</style>
+<style>
+  .page-head{padding:40px 0 12px;}
+  .page-head h1{font-size:clamp(30px,4vw,44px);max-width:640px;line-height:1.08;}
+  .page-head p{color:var(--muted);font-size:15.5px;margin-top:12px;max-width:540px;}
+
+  .func-list{border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .func-row{display:grid;grid-template-columns:230px 1fr;gap:20px;padding:18px 22px;border-bottom:1px solid var(--line-soft);}
+  .func-row:last-child{border-bottom:none;}
+  .func-name{font-family:var(--mono);font-size:14px;color:var(--amber);}
+  .func-who{display:block;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted-dim);}
+  .func-body p{margin:0;color:var(--muted);font-size:14px;line-height:1.7;}
+
+  .states{display:flex;gap:8px;flex-wrap:wrap;}
+  .state-card{flex:1;min-width:180px;border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--bg-raised);box-shadow:0 8px 24px -22px rgba(91,140,255,.22);transition:border-color .28s ease,transform .28s cubic-bezier(.16,1,.3,1),box-shadow .28s ease;}
+  .state-card h3{font-size:15px;margin-bottom:6px;}
+  .state-card p{color:var(--muted);font-size:13px;margin:0;line-height:1.55;}
+  .state-card:hover{transform:translateY(-2px);border-color:rgba(91,140,255,.24);box-shadow:0 12px 28px -22px rgba(91,140,255,.32);}
+  .state-arrow{display:flex;align-items:center;color:var(--muted-dim);font-family:var(--mono);}
+
+  .checklist{border:1px solid var(--line);border-radius:14px;padding:6px;}
+  .check-row{display:flex;gap:12px;padding:13px 16px;align-items:flex-start;border-bottom:1px solid var(--line-soft);}
+  .check-row:last-child{border-bottom:none;}
+  .check-mark{width:20px;height:20px;flex:none;border-radius:6px;border:1px solid var(--line);display:grid;place-items:center;font-size:12px;color:var(--teal);margin-top:1px;}
+  .check-row h4{margin:0 0 4px;font-size:14.5px;font-family:var(--sans);font-weight:600;}
+  .check-row p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.6;}
+
+  @media (max-width:700px){
+    .func-row{grid-template-columns:1fr;}
+    .states{flex-direction:column;}
+    .state-arrow{transform:rotate(90deg);align-self:center;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">B</span>
+      <span class="brand-word">BugShield</span>
+    </a>
+    <div class="nav-links">
+      <a href="how-it-works.html">How it works</a>
+      <a href="app.html">Launch app</a>
+    </div>
+    <a class="btn btn-line btn-sm" href="app.html">Launch app</a>
+  </nav>
+
+  <div class="page-head">
+    <p class="eyebrow">Reference</p>
+    <h1>Everything the contract does, in plain terms.</h1>
+    <p>BugBounty.sol handles the whole lifecycle — creating a bounty, filing a report, and paying it out. This page walks through each function and state so nothing on the app screen is a surprise.</p>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">Contract functions</p>
+      <h2>What each call actually does</h2>
+    </div>
+    <div class="func-list">
+      <div class="func-row">
+        <div><span class="func-name">createBounty(title, description)</span><span class="func-who">payable · organization</span></div>
+        <div class="func-body"><p>Opens a new bounty. The ETH sent with the transaction becomes the reward and is held by the contract until the bounty is resolved.</p></div>
+      </div>
+      <div class="func-row">
+        <div><span class="func-name">submitReport(id, reportHash)</span><span class="func-who">researcher</span></div>
+        <div class="func-body"><p>Attaches a report hash to an open bounty and moves it into the Submitted state. Only the hash lives on-chain — the write-up itself stays wherever you host it (IPFS, a document, etc.).</p></div>
+      </div>
+      <div class="func-row">
+        <div><span class="func-name">resolveBounty(id, accepted)</span><span class="func-who">organization only</span></div>
+        <div class="func-body"><p>Accepts or rejects the submitted report. Accepting transfers the locked reward to the researcher in the same transaction; rejecting closes the bounty without paying out.</p></div>
+      </div>
+      <div class="func-row">
+        <div><span class="func-name">getBounty(id)</span><span class="func-who">view · anyone</span></div>
+        <div class="func-body"><p>Reads back a bounty's title, description, reward, organization, researcher, report hash and status. This is what the live bounty board calls to render every card.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">Status</p>
+      <h2>A bounty is always in exactly one state</h2>
+    </div>
+    <div class="states">
+      <div class="state-card"><h3>Open</h3><p>Reward is locked. Waiting for a researcher to submit a report.</p></div>
+      <div class="state-arrow">→</div>
+      <div class="state-card"><h3>Submitted</h3><p>A report hash has been filed. Waiting on the organization's decision.</p></div>
+      <div class="state-arrow">→</div>
+      <div class="state-card"><h3>Resolved</h3><p>Accepted and paid, or rejected. Either way, the bounty is closed.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">Before you connect</p>
+      <h2>What the app checks for you</h2>
+    </div>
+    <div class="checklist">
+      <div class="check-row"><span class="check-mark">✓</span><div><h4>MetaMask installed</h4><p>The app detects <code>window.ethereum</code> before doing anything else.</p></div></div>
+      <div class="check-row"><span class="check-mark">✓</span><div><h4>Network is Sepolia</h4><p>If you're on another network, the app requests a switch to chain ID 11155111 before connecting.</p></div></div>
+      <div class="check-row"><span class="check-mark">✓</span><div><h4>Account &amp; network changes</h4><p>Switching accounts or networks in MetaMask is detected automatically and reflected in the app.</p></div></div>
+      <div class="check-row"><span class="check-mark">✓</span><div><h4>Contract address configured</h4><p>The deployed BugBounty address is set once in the app's script before it can read or write anything.</p></div></div>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
+    <a class="next-step" href="app.html" id="nextStep">
+      <div class="ns-left">
+        <p class="ns-eyebrow"><span class="ns-dot"></span>Next step</p>
+        <h3 class="ns-title">Launch the app <span>— connect and start</span></h3>
+      </div>
+      <span class="ns-arrow">→</span>
+    </a>
+  </section>
+
+  <div class="foot">
+    <span>BugShield — Solidity + Ethereum + MetaMask</span>
+    <span><a href="index.html">Home</a> · <a href="app.html">Launch app</a></span>
+  </div>
+</div>
+
+<script>
+  document.getElementById("nextStep").addEventListener("mousemove", (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    e.currentTarget.style.setProperty("--my", (e.clientY - r.top) + "px");
+  });
+</script>
+</body>
+</html>

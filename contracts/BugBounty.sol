@@ -24,6 +24,15 @@ contract BugBounty {
 
     mapping(uint256 => Bounty) public bounties;
 
+    bool private locked;
+
+    modifier nonReentrant() {
+        require(!locked, "Reentrant call");
+        locked = true;
+        _;
+        locked = false;
+    }
+
     event BountyCreated(
         uint256 indexed bountyId,
         address indexed organization,
@@ -48,6 +57,8 @@ contract BugBounty {
     ) public payable {
 
         require(msg.value > 0, "Reward must be greater than zero");
+        require(bytes(_title).length > 0, "Title required");
+        require(bytes(_description).length > 0, "Description required");
 
         bounties[bountyCount] = Bounty({
             id: bountyCount,
@@ -76,6 +87,9 @@ contract BugBounty {
 
         Bounty storage bounty = bounties[_bountyId];
 
+        require(_bountyId < bountyCount, "Invalid bounty");
+        require(bytes(_reportHash).length > 0, "Empty report");
+
         require(
             bounty.status == Status.Open,
             "Bounty is not open"
@@ -100,8 +114,9 @@ contract BugBounty {
     function resolveBounty(
         uint256 _bountyId,
         bool _accepted
-    ) public {
+    ) public nonReentrant {
 
+        require(_bountyId < bountyCount, "Invalid bounty");
         Bounty storage bounty = bounties[_bountyId];
 
         require(
@@ -117,7 +132,11 @@ contract BugBounty {
         bounty.status = Status.Resolved;
 
         if (_accepted) {
-            payable(bounty.researcher).transfer(bounty.reward);
+            (bool success, ) = payable(bounty.researcher).call{value: bounty.reward}("");
+            require(success, "Reward transfer failed");
+        } else {
+            (bool refundSuccess, ) = bounty.organization.call{value: bounty.reward}("");
+            require(refundSuccess, "Refund transfer failed");
         }
 
         emit BountyResolved(
@@ -139,6 +158,7 @@ contract BugBounty {
         string memory,
         Status
     ) {
+        require(_bountyId < bountyCount, "Invalid bounty");
         Bounty memory bounty = bounties[_bountyId];
 
         return (
@@ -151,5 +171,16 @@ contract BugBounty {
             bounty.reportHash,
             bounty.status
         );
+    }
+
+    function cancelBounty(uint256 _bountyId) public nonReentrant {
+        require(_bountyId < bountyCount, "Invalid bounty");
+        Bounty storage bounty = bounties[_bountyId];
+        require(msg.sender == bounty.organization, "Only organization can cancel");
+        require(bounty.status == Status.Open, "Only open bounties can be cancelled");
+        bounty.status = Status.Resolved;
+        (bool refundSuccess, ) = bounty.organization.call{value: bounty.reward}("");
+        require(refundSuccess, "Refund transfer failed");
+        emit BountyResolved(_bountyId, address(0), false);
     }
 }

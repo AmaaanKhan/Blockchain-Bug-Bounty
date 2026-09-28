@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Launch — BugShield</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#03050a;
+  --bg-raised:#080b14;
+  --bg-inset:#05070e;
+  --line:rgba(150,170,210,.12);
+  --line-soft:rgba(150,170,210,.07);
+  --text:#eef1f7;
+  --muted:#99a2b8;
+  --muted-dim:#6d7590;
+  --amber:#5b8cff;
+  --amber-dim:rgba(91,140,255,.14);
+  --violet:#8b7bff;
+  --teal:#2eff9e;
+  --red:#ff6b5e;
+  --sans:'Inter',ui-sans-serif,system-ui,sans-serif;
+  --display:'Space Grotesk',var(--sans);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(60,90,160,.10), transparent 45%),
+    radial-gradient(circle at 100% 30%, rgba(40,70,140,.08), transparent 40%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(240px circle at 0% 0%,rgba(210,220,242,.09),transparent 70%),radial-gradient(240px circle at 100% 0%,rgba(210,220,242,.09),transparent 70%),radial-gradient(240px circle at 0% 100%,rgba(190,202,226,.07),transparent 70%),radial-gradient(240px circle at 100% 100%,rgba(210,220,242,.09),transparent 70%);animation:corner-breathe 7s ease-in-out infinite;}
+@keyframes corner-breathe{0%,100%{opacity:.7;}50%{opacity:1;}}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(380px circle at 0% 0%,rgba(30,64,175,.35),transparent 70%),radial-gradient(380px circle at 100% 0%,rgba(30,58,180,.32),transparent 70%),radial-gradient(380px circle at 0% 100%,rgba(23,52,160,.28),transparent 70%),radial-gradient(380px circle at 100% 100%,rgba(30,64,175,.35),transparent 70%);opacity:0;transition:opacity 1.2s ease;}
+body.connected::before{opacity:1;}
+::selection{background:rgba(91,140,255,.35);color:#fff;}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:rgba(91,140,255,.25);border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(91,140,255,.4);}
+a{color:inherit;}
+img{max-width:100%;}
+
+.wrap{width:min(1280px,calc(100% - 24px));margin:0 auto;}
+
+/* ---------- nav ---------- */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 0;
+  border-bottom:1px solid var(--line-soft);
+}
+.nav-links{display:flex;align-items:center;gap:28px;font-size:14px;color:var(--muted);}
+   .nav-links a{text-decoration:none;transition:color .2s ease,text-shadow .2s ease;}
+   .nav-links a:hover{color:var(--text);text-shadow:0 0 4px rgba(91,140,255,.3);}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.brand-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--amber);
+  display:grid;place-items:center;
+  color:#0a0a09;font-weight:700;font-family:var(--display);font-size:15px;
+}
+.brand-word{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:-.2px;}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:10px;border:1px solid transparent;
+  padding:12px 20px;font-size:14px;font-weight:600;font-family:var(--sans);
+  cursor:pointer;text-decoration:none;
+  transition:transform .15s cubic-bezier(.2,.8,.2,1),filter .15s ease,background .2s ease,border-color .2s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn{position:relative;overflow:hidden;}
+.btn-amber::after,.btn-green::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-15deg);}
+.btn-amber:hover::after,.btn-green:hover::after{animation:btn-shine .7s ease;}
+@keyframes btn-shine{from{left:-70%;}to{left:140%;}}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-amber{background:var(--amber);color:#050912;box-shadow:0 0 12px -6px rgba(91,140,255,.35);text-shadow:0 0 1px rgba(5,9,18,.3);transition:box-shadow .2s ease,filter .15s ease,transform .15s cubic-bezier(.2,.8,.2,1);}
+   .btn-amber:hover{filter:brightness(1.12);box-shadow:0 0 20px -4px rgba(91,140,255,.55);transform:translateY(-1px);text-shadow:0 0 1px rgba(5,9,18,.4);}
+   .btn-amber:active{transform:scale(.97);}
+.btn-line{background:transparent;border-color:var(--line);color:var(--text);}
+.btn-line:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.03);}
+.btn-green{background:var(--teal);color:#04120b;box-shadow:0 0 20px -4px rgba(46,255,158,.5);}
+.btn-green:hover{filter:brightness(1.1);box-shadow:0 0 28px -2px rgba(46,255,158,.65);}
+.btn-quiet{background:transparent;color:var(--muted);padding:12px 6px;}
+.btn-quiet:hover{color:var(--text);}
+.btn-sm{padding:8px 13px;font-size:12.5px;border-radius:8px;}
+.btn-block{width:100%;}
+
+/* ---------- pills / tags ---------- */
+.pill{
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--line);border-radius:999px;
+  padding:7px 12px;font-size:12px;color:var(--muted);font-family:var(--mono);
+}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(255,107,94,.15);}
+.pill-dot.live{background:var(--teal);box-shadow:0 0 10px 2px rgba(46,255,158,.7);animation:pill-blink 2.2s ease-in-out infinite;}
+@keyframes pill-blink{0%,100%{opacity:1;box-shadow:0 0 10px 2px rgba(46,255,158,.7);}50%{opacity:.6;box-shadow:0 0 18px 5px rgba(46,255,158,.4);}}
+  .swap{display:inline-block;animation:swap-in 1.5s cubic-bezier(.16,1,.3,1);}
+  @keyframes swap-in{from{opacity:0;transform:translateY(6px) scale(.94);filter:blur(3px);}to{opacity:1;transform:none;filter:blur(0);}}
+
+.tag{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:7px;font-size:11px;font-weight:500;
+  font-family:var(--mono);border:1px solid var(--line);color:var(--muted);
+}
+.tag.open{color:var(--teal);border-color:rgba(99,217,196,.3);}
+.tag.submitted{color:var(--amber);border-color:rgba(91,140,255,.35);}
+.tag.resolved{color:var(--muted);border-color:var(--line);}
+.tag{box-shadow:inset 0 1px 0 rgba(255,255,255,.05);letter-spacing:.3px;}
+.tag.open{box-shadow:0 0 12px -4px rgba(46,255,158,.4);}
+.tag.submitted{box-shadow:0 0 12px -4px rgba(91,140,255,.4);}
+
+/* ---------- section rhythm ---------- */
+section{padding:20px 0;}
+.eyebrow{
+  font-family:var(--mono);font-size:12.5px;color:var(--muted);
+  margin:0 0 10px;
+}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.5px;text-shadow:0 0 2px rgba(91,140,255,.1);}
+.section-head{max-width:640px;margin-bottom:30px;}
+.section-head h2{font-size:clamp(26px,3.4vw,38px);line-height:1.12;}
+.section-head p{color:var(--muted);font-size:15.5px;margin-top:14px;max-width:520px;}
+
+hr.rule{border:0;border-top:1px solid var(--line-soft);margin:0;}
+
+/* ---------- next-step nav card ---------- */
+.next-step{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  border:1px solid var(--line);border-radius:16px;padding:28px 32px;
+  text-decoration:none;color:var(--text);background:var(--bg-raised);
+  position:relative;overflow:hidden;
+  transition:border-color .3s ease,transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease;
+}
+.next-step::before{
+   content:"";position:absolute;inset:0;
+   background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(91,140,255,.18),transparent 60%);
+   opacity:0;transition:opacity .35s ease;pointer-events:none;
+}
+.next-step:hover{border-color:rgba(91,140,255,.4);transform:translateY(-3px);box-shadow:0 22px 46px -20px rgba(91,140,255,.45);}
+   .next-step:hover::before{opacity:1;}
+.ns-left{position:relative;z-index:1;}
+.ns-eyebrow{font-family:var(--mono);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.ns-eyebrow .ns-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 3px rgba(91,140,255,.18);}
+.ns-title{font-family:var(--display);font-size:clamp(19px,2.6vw,26px);margin-top:8px;letter-spacing:-.3px;text-shadow:0 0 2px rgba(91,140,255,.1);}
+   .ns-title span{color:var(--muted);font-weight:400;}
+.ns-arrow{
+  position:relative;z-index:1;flex:none;
+  width:48px;height:48px;border-radius:50%;
+  border:1px solid var(--line);display:grid;place-items:center;
+  font-size:18px;color:var(--text);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s ease,color .3s ease,border-color .3s ease;
+}
+.next-step:hover .ns-arrow{
+  transform:translateX(6px);
+  background:var(--amber);color:#050912;border-color:transparent;
+}
+@media (max-width:600px){
+  .next-step{padding:22px;flex-wrap:wrap;}
+}
+
+.foot{
+  border-top:1px solid var(--line-soft);
+  padding:34px 0;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
+  color:var(--muted-dim);font-size:12.5px;
+}
+.foot a{color:var(--muted);text-decoration:none;}
+.foot a:hover{color:var(--text);}
+
+/* ---------- reveal-on-load ---------- */
+.rise{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.16,1,.3,1) forwards;}
+@keyframes rise{to{opacity:1;transform:none;}}
+
+@media (max-width:760px){
+  section{padding:16px 0;}
+  .nav-links{display:none;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important;}
+}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<style>
+  .app-shell{padding-bottom:120px;}
+
+  .step{margin:8px 0;animation:step-in .55s cubic-bezier(.16,1,.3,1) both;}
+  .app-shell>section:nth-of-type(1){animation-delay:.05s;}
+  .app-shell>section:nth-of-type(2){animation-delay:.15s;}
+  .app-shell>section:nth-of-type(3){animation-delay:.25s;}
+  @keyframes step-in{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin-bottom:12px;}
+  .step-num{font-family:var(--mono);color:var(--amber);font-size:13px;}
+  .step-head h2{font-size:22px;font-family:var(--display);letter-spacing:-.4px;}
+  .step-head p{color:var(--muted);font-size:13.5px;margin-left:auto;text-align:right;}
+
+.connect-card{
+     border:1px solid var(--line);border-radius:14px;padding:20px 22px;
+     background:var(--bg-raised);
+     display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+     box-shadow:0 4px 14px -10px rgba(91,140,255,.18);
+     transition:box-shadow .28s ease,border-color .28s ease,transform .28s ease;
+   }
+   .connect-card:hover{transform:perspective(900px) rotateX(2deg);box-shadow:0 0 22px -6px rgba(91,140,255,.38);border-color:rgba(91,140,255,.3);}
+  .connect-left p{color:var(--muted);font-size:13.5px;max-width:440px;margin:7px 0 0;line-height:1.55;}
+  .connect-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.card{border:1px solid var(--line);border-radius:14px;padding:20px;background:var(--bg-raised);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 4px 14px -10px rgba(91,140,255,.18);transition:border-color .28s ease,transform .28s cubic-bezier(.16,1,.3,1),box-shadow .28s ease;}
+   .card:hover{transform:perspective(900px) rotateX(2.5deg) translateY(-3px);border-color:rgba(91,140,255,.35);box-shadow:0 0 24px -6px rgba(91,140,255,.4),0 10px 26px -20px rgba(91,140,255,.35);}
+  .card h3{font-size:17px;margin-bottom:3px;font-family:var(--display);}
+  .card .sub{color:var(--muted);font-size:12.5px;margin:0 0 14px;}
+
+  label{display:block;color:var(--muted);font-size:12.5px;font-weight:500;margin-bottom:12px;}
+  label span{display:block;margin-bottom:6px;}
+  input,textarea{
+    width:100%;border:1px solid var(--line);border-radius:10px;
+    background:var(--bg-inset);color:var(--text);padding:11px 13px;
+    font-family:var(--sans);font-size:13.5px;outline:none;
+    transition:border-color .15s ease;
+  }
+  textarea{min-height:96px;resize:vertical;}
+  input:focus,textarea:focus{border-color:rgba(91,140,255,.55);}
+  .amt-wrap{position:relative;}
+  .amt-wrap input{padding-right:52px;}
+  .amt-unit{position:absolute;right:12px;top:11px;font-family:var(--mono);font-size:11px;color:var(--amber);}
+  .field-hint{color:var(--muted-dim);font-size:11.5px;margin-top:-8px;margin-bottom:16px;line-height:1.5;}
+
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+  .stat{border:1px solid var(--line);border-radius:12px;padding:13px 16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 8px -8px rgba(91,140,255,.15);transition:transform .28s ease,box-shadow .28s ease;}
+  .stat:hover{transform:perspective(900px) rotateX(3deg) translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 20px -6px rgba(91,140,255,.35);}
+  .stat span{color:var(--muted);font-size:11.5px;font-family:var(--mono);}
+  .stat strong{display:block;margin-top:4px;font-size:20px;font-family:var(--display);font-weight:600;}
+
+  .board-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
+  .bounties{display:grid;gap:6px;}
+  .bounty{border:1px solid var(--line);border-radius:12px;padding:15px;background:var(--bg-raised);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 8px -6px rgba(91,140,255,.12);transition:box-shadow .28s ease,border-color .28s ease,transform .28s ease;animation:bounty-in 1s cubic-bezier(.16,1,.3,1) both;}
+  @keyframes bounty-in{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+   .bounty:hover{transform:perspective(900px) rotateX(2deg) translateY(-2px);box-shadow:0 0 20px -6px rgba(91,140,255,.38);border-color:rgba(91,140,255,.3);}
+  .bounty-top{display:flex;justify-content:space-between;gap:14px;}
+  .bounty h4{margin:0;font-size:16.5px;font-family:var(--display);}
+  .bounty-id{color:var(--muted-dim);font-size:11px;margin-top:5px;font-family:var(--mono);}
+  .reward{color:var(--teal);font-weight:600;white-space:nowrap;font-family:var(--mono);font-size:13.5px;}
+  .desc{color:var(--muted);line-height:1.6;font-size:13px;margin:12px 0;white-space:pre-wrap;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);padding:10px 0;}
+  .meta{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
+  .bounty-actions{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line-soft);padding-top:12px;}
+  .empty{text-align:center;color:var(--muted);padding:44px 20px;border:1px dashed rgba(91,140,255,.35);border-radius:14px;font-size:13.5px;background:radial-gradient(circle at 50% 0%,rgba(91,140,255,.08),transparent 65%),var(--bg-raised);box-shadow:0 0 26px -10px rgba(91,140,255,.4);}
+  .empty-icon{width:44px;height:44px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;font-size:22px;color:#050912;background:var(--amber);box-shadow:0 0 22px -4px rgba(91,140,255,.6);}
+  .empty h4{margin:0 0 6px;font-size:17px;}
+  .empty p{margin:0 0 16px;color:var(--muted);font-size:13px;}
+
+  .statusbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;
+    border-top:1px solid var(--line);background:rgba(6,6,6,.9);backdrop-filter:blur(10px);
+    padding:13px 0;font-size:12.5px;color:var(--muted);
+  }
+  .statusbar .wrap{display:flex;align-items:center;gap:10px;}
+  .statusbar .dot{width:7px;height:7px;border-radius:50%;background:var(--muted-dim);flex:none;}
+  .statusbar.success .dot{background:var(--teal);}
+  .statusbar.success{color:var(--teal);}
+  .statusbar.error .dot{background:var(--red);}
+  .statusbar.error{color:var(--red);}
+  .statusbar.info .dot{background:var(--amber);}
+  .statusbar{transition:color .3s ease,border-color .3s ease;}
+  .statusbar.success .dot{animation:dot-pulse 1.8s ease-in-out infinite;}
+  @keyframes dot-pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+  .modal-backdrop{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);padding:18px;}
+  .modal-backdrop.show{display:grid;}
+  .modal-backdrop.show .modal{animation:modal-in .3s cubic-bezier(.16,1,.3,1);}
+  @keyframes modal-in{from{opacity:0;transform:scale(.94) translateY(10px);}to{opacity:1;transform:none;}}
+  .modal{width:min(480px,100%);border:1px solid var(--line);border-radius:16px;background:var(--bg-raised);padding:26px;box-shadow:0 0 50px -12px rgba(91,140,255,.5);}
+  .modal h3{font-family:var(--display);margin-bottom:6px;}
+  .modal p{color:var(--muted);font-size:13px;margin:0 0 16px;}
+  .modal-row{display:flex;gap:10px;margin-top:18px;}
+
+  @media (max-width:820px){
+    .cols{grid-template-columns:1fr;}
+    .stats-row{grid-template-columns:1fr;}
+    .step-head{flex-direction:column;align-items:flex-start;}
+    .step-head p{text-align:left;margin-left:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap app-shell">
+  <nav class="nav">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">B</span>
+      <span class="brand-word">BugShield</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="how-it-works.html">How it works</a>
+    </div>
+    <span class="pill"><span class="pill-dot" id="pillDot"></span><span id="networkName">Not connected</span></span>
+  </nav>
+
+  <section class="step" style="margin-top:22px;">
+    <div class="step-head">
+      <span class="step-num">STEP 01</span>
+      <h2>Connect your wallet</h2>
+      <p>MetaMask on Sepolia (11155111) is required for every action below.</p>
+    </div>
+    <div class="connect-card">
+      <div class="connect-left">
+        <span class="pill" id="walletPill"><span class="pill-dot" id="walletDot"></span><span id="walletText">Wallet not connected</span></span>
+        <p>Connecting checks your network first. If MetaMask is on another chain, BugShield will ask it to switch to Sepolia before anything else can run.</p>
+      </div>
+      <div class="connect-right">
+        <button class="btn btn-line btn-sm" id="refreshTopBtn">Refresh bounties</button>
+        <button class="btn btn-amber" id="connectBtn">Connect MetaMask</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-head">
+      <span class="step-num">STEP 02</span>
+      <h2>Track every bounty</h2>
+      <p>Read live from the deployed BugBounty contract.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><span>TOTAL BOUNTIES</span><strong id="totalBounties">—</strong></div>
+      <div class="stat"><span>OPEN</span><strong id="openBounties">—</strong></div>
+      <div class="stat"><span>REWARDS LOCKED</span><strong id="totalRewards">— ETH</strong></div>
+    </div>
+
+    <div class="card">
+      <div class="board-head">
+        <div>
+          <h3 style="margin-bottom:2px;">Live bounty board</h3>
+          <p class="sub" style="margin:0;">Open, submitted and resolved bounties, newest logic first.</p>
+        </div>
+        <button class="btn btn-line btn-sm" id="refreshBtn">Refresh</button>
+      </div>
+      <div class="bounties" id="bountyList">
+        <div class="empty">Connect MetaMask and refresh to load bounties.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="step" id="createPanel">
+    <div class="step-head">
+      <span class="step-num">STEP 03</span>
+      <h2>Create a bounty, or file a report</h2>
+      <p>Organizations lock a reward. Researchers report against an open bounty.</p>
+    </div>
+    <div class="cols">
+      <div class="card">
+        <h3>Create a bounty</h3>
+        <p class="sub">Organization action — locks an ETH reward in the contract.</p>
+        <label><span>Bounty title</span>
+          <input id="title" maxlength="100" placeholder="e.g. Reentrancy in withdraw()" />
+        </label>
+        <label><span>Vulnerability description</span>
+          <textarea id="description" maxlength="1000" placeholder="Describe the scope and what should be tested…"></textarea>
+        </label>
+        <label><span>ETH reward</span>
+          <div class="amt-wrap">
+            <input id="reward" type="number" min="0" step="0.0001" placeholder="0.05" />
+            <span class="amt-unit">ETH</span>
+          </div>
+        </label>
+        <button class="btn btn-amber btn-block" id="createBtn">Create &amp; lock reward</button>
+        <p class="field-hint" style="margin-top:14px;">Sent as value with <code>createBounty()</code>. You become the bounty's organization and the only account that can resolve it.</p>
+      </div>
+
+      <div class="card">
+        <h3>Submit a report</h3>
+        <p class="sub">Researcher action — files a report hash against an open bounty.</p>
+        <label><span>Bounty ID</span>
+          <input id="reportBountyId" type="number" min="0" placeholder="0" />
+        </label>
+        <label><span>Report hash</span>
+          <input id="reportHash" placeholder="IPFS CID / document hash / evidence hash" />
+        </label>
+        <button class="btn btn-line btn-block" id="submitReportBtn">Submit vulnerability report</button>
+        <p class="field-hint" style="margin-top:14px;">Only the hash is stored on-chain — keep the full write-up wherever you host your evidence.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="statusbar info" id="status">
+  <div class="wrap"><span class="dot"></span><span id="statusText">Ready. Deploy the BugBounty contract and paste its address into this file.</span></div>
+</div>
+
+<div class="modal-backdrop" id="reportModal">
+  <div class="modal">
+    <h3>Submit vulnerability report</h3>
+    <p>Bounty #<strong id="modalBountyId">—</strong> will receive the report hash below.</p>
+    <input id="modalReportHash" placeholder="Paste report hash / CID" />
+    <div class="modal-row">
+      <button class="btn btn-line" id="closeModalBtn">Cancel</button>
+      <button class="btn btn-amber" id="modalSubmitBtn">Confirm submission</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ==========================================================
+  // 1. PASTE YOUR DEPLOYED BugBounty CONTRACT ADDRESS HERE
+  // ==========================================================
+  const CONTRACT_ADDRESS = "0xC3045914943e2E2787c1CC4aBf55AE51B5c01bb8";
+
+  // ==========================================================
+  // 2. Contract ABI (matches BugBounty.sol)
+  // ==========================================================
+  const ABI = [
+    {
+      "inputs":[
+        {"internalType":"string","name":"_title","type":"string"},
+        {"internalType":"string","name":"_description","type":"string"}
+      ],
+      "name":"createBounty",
+      "outputs":[],
+      "stateMutability":"payable",
+      "type":"function"
+    },
+    {
+      "inputs":[{"internalType":"uint256","name":"","type":"uint256"}],
+      "name":"bounties",
+      "outputs":[
+        {"internalType":"uint256","name":"id","type":"uint256"},
+        {"internalType":"string","name":"title","type":"string"},
+        {"internalType":"string","name":"description","type":"string"},
+        {"internalType":"uint256","name":"reward","type":"uint256"},
+        {"internalType":"address","name":"organization","type":"address"},
+        {"internalType":"address","name":"researcher","type":"address"},
+        {"internalType":"string","name":"reportHash","type":"string"},
+        {"internalType":"uint8","name":"status","type":"uint8"}
+      ],
+      "stateMutability":"view",
+      "type":"function"
+    },
+    {
+      "inputs":[{"internalType":"uint256","name":"_bountyId","type":"uint256"}],
+      "name":"getBounty",
+      "outputs":[
+        {"internalType":"uint256","type":"uint256"},
+        {"internalType":"string","type":"string"},
+        {"internalType":"string","type":"string"},
+        {"internalType":"uint256","type":"uint256"},
+        {"internalType":"address","type":"address"},
+        {"internalType":"address","type":"address"},
+        {"internalType":"string","type":"string"},
+        {"internalType":"uint8","type":"uint8"}
+      ],
+      "stateMutability":"view",
+      "type":"function"
+    },
+    {
+      "inputs":[],
+      "name":"bountyCount",
+      "outputs":[{"internalType":"uint256","name":"","type":"uint256"}],
+      "stateMutability":"view",
+      "type":"function"
+    },
+    {
+      "inputs":[
+        {"internalType":"uint256","name":"_bountyId","type":"uint256"},
+        {"internalType":"bool","name":"_accepted","type":"bool"}
+      ],
+      "name":"resolveBounty",
+      "outputs":[],
+      "stateMutability":"nonpayable",
+      "type":"function"
+    },
+    {
+      "inputs":[
+        {"internalType":"uint256","name":"_bountyId","type":"uint256"},
+        {"internalType":"string","name":"_reportHash","type":"string"}
+      ],
+      "name":"submitReport",
+      "outputs":[],
+      "stateMutability":"nonpayable",
+      "type":"function"
+    },
+    {
+      "anonymous":false,
+      "inputs":[
+        {"indexed":true,"internalType":"uint256","name":"bountyId","type":"uint256"},
+        {"indexed":true,"internalType":"address","name":"organization","type":"address"},
+        {"indexed":false,"internalType":"uint256","name":"reward","type":"uint256"}
+      ],
+      "name":"BountyCreated",
+      "type":"event"
+    },
+    {
+      "anonymous":false,
+      "inputs":[
+        {"indexed":true,"internalType":"uint256","name":"bountyId","type":"uint256"},
+        {"indexed":true,"internalType":"address","name":"researcher","type":"address"},
+        {"indexed":false,"internalType":"string","name":"reportHash","type":"string"}
+      ],
+      "name":"ReportSubmitted",
+      "type":"event"
+    },
+    {
+      "anonymous":false,
+      "inputs":[
+        {"indexed":true,"internalType":"uint256","name":"bountyId","type":"uint256"},
+        {"indexed":true,"internalType":"address","name":"researcher","type":"address"},
+        {"indexed":false,"internalType":"bool","name":"accepted","type":"bool"}
+      ],
+      "name":"BountyResolved",
+      "type":"event"
+    }
+  ];
+
+  let provider = null;
+  let signer = null;
+  let contract = null;
+  let userAddress = null;
+  let selectedReportBountyId = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function setStatus(message, type = "info") {
+    const el = $("status");
+    $("statusText").textContent = message;
+    el.className = "statusbar " + type;
+  }
+
+  function setTextAnimated(id, text) {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = text;
+    el.classList.remove("swap");
+    void el.offsetWidth;
+    el.classList.add("swap");
+  }
+
+  function shortAddress(address) {
+    if (!address || address === ethers.constants.AddressZero) return "—";
+    return address.slice(0, 6) + "…" + address.slice(-4);
+  }
+
+  function statusName(value) {
+    const n = Number(value);
+    return ["Open", "Submitted", "Resolved"][n] || "Unknown";
+  }
+
+  function statusClass(value) {
+    return statusName(value).toLowerCase();
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function isConfigured() {
+    return CONTRACT_ADDRESS &&
+      CONTRACT_ADDRESS.startsWith("0x") &&
+      CONTRACT_ADDRESS.length === 42;
+  }
+
+  const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7";
+  const SEPOLIA_CHAIN_ID = 11155111;
+
+  async function ensureSepolia() {
+    const currentChainId = await window.ethereum.request({
+      method: "eth_chainId"
+    });
+
+    if (currentChainId === SEPOLIA_CHAIN_ID_HEX) {
+      return true;
+    }
+
+    setStatus("Switching MetaMask to Sepolia Test Network…", "info");
+
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }]
+      });
+    } catch (switchError) {
+      // 4902 = chain is not added to the wallet. MetaMask normally has Sepolia
+      // available when test networks are enabled, so give the user a clear message.
+      if (switchError?.code === 4902) {
+        setStatus("Sepolia is not available in MetaMask. Enable test networks, then connect again.", "error");
+      } else if (switchError?.code === 4001) {
+        setStatus("Network switch was rejected. Please select Sepolia in MetaMask.", "error");
+      } else {
+        setStatus("Could not switch to Sepolia: " + (switchError?.message || switchError), "error");
+      }
+      return false;
+    }
+
+    const finalChainId = await window.ethereum.request({
+      method: "eth_chainId"
+    });
+
+    if (finalChainId !== SEPOLIA_CHAIN_ID_HEX) {
+      setStatus("Please switch MetaMask to Sepolia Test Network.", "error");
+      return false;
+    }
+
+    return true;
+  }
+
+  async function connect() {
+    if (!window.ethereum) {
+      setStatus("MetaMask was not detected. Install/unlock MetaMask and reload this page.", "error");
+      return;
+    }
+
+    try {
+      // This DApp is permanently configured for Sepolia. If MetaMask is on
+      // Mainnet or another network, request a switch before creating the provider.
+      const onSepolia = await ensureSepolia();
+      if (!onSepolia) return;
+
+      provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      userAddress = await signer.getAddress();
+
+      // Green lights on the moment MetaMask connects
+      setTextAnimated("walletText", shortAddress(userAddress));
+      const walletDot = $("walletDot");
+      if (walletDot) walletDot.classList.add("live");
+      $("pillDot").classList.add("live");
+      setTextAnimated("networkName", "Sepolia (11155111)");
+      setTextAnimated("connectBtn", "Wallet connected");
+      document.body.classList.add("connected");
+
+      const network = await provider.getNetwork();
+      if (Number(network.chainId) !== SEPOLIA_CHAIN_ID) {
+        setStatus("Wrong network. This DApp only works on Sepolia (11155111).", "error");
+        $("pillDot").classList.remove("live");
+        if (walletDot) walletDot.classList.remove("live");
+        document.body.classList.remove("connected");
+        return;
+      }
+
+      if (!isConfigured()) {
+        setStatus("MetaMask connected. Paste your deployed BugBounty contract address into CONTRACT_ADDRESS first.", "error");
+        return;
+      }
+
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      setStatus("Connected to BugShield on Sepolia. Loading bounties…", "success");
+      await loadBounties();
+    } catch (error) {
+      console.error(error);
+      setStatus("Connection error: " + (error?.reason || error?.data?.message || error?.message || error), "error");
+    }
+  }
+
+  // Keep the DApp on the network where the BugBounty contract was deployed.
+  if (window.ethereum) {
+    window.ethereum.on("chainChanged", async (chainId) => {
+      contract = null;
+      signer = null;
+      provider = null;
+
+      if (chainId !== SEPOLIA_CHAIN_ID_HEX) {
+        setTextAnimated("networkName", "Switch to Sepolia");
+        $("pillDot").classList.remove("live");
+        const wd1 = $("walletDot");
+        if (wd1) wd1.classList.remove("live");
+        document.body.classList.remove("connected");
+        setStatus("Wrong network. Switch MetaMask back to Sepolia to use BugShield.", "error");
+        return;
+      }
+
+      // Reconnect after a manual switch to Sepolia.
+      try {
+        await connect();
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    window.ethereum.on("accountsChanged", async (accounts) => {
+      if (!accounts || accounts.length === 0) {
+        contract = null;
+        signer = null;
+        userAddress = null;
+        setTextAnimated("connectBtn", "Connect MetaMask");
+        setTextAnimated("walletText", "Wallet not connected");
+        $("pillDot").classList.remove("live");
+        const wd2 = $("walletDot");
+        if (wd2) wd2.classList.remove("live");
+        document.body.classList.remove("connected");
+        setStatus("Wallet disconnected. Connect MetaMask to continue.", "info");
+        return;
+      }
+
+      try {
+        await connect();
+      } catch (error) {
+        console.error(error);
+      }
+    });
+  }
+
+  async function loadBounties() {
+    if (!contract) {
+      setStatus("Connect MetaMask first.", "info");
+      return;
+    }
+
+    try {
+      const countBN = await contract.bountyCount();
+      const count = countBN.toNumber();
+
+      $("totalBounties").textContent = count;
+
+      if (count === 0) {
+        $("openBounties").textContent = "0";
+        $("totalRewards").textContent = "0 ETH";
+        $("bountyList").innerHTML = `
+          <div class="empty"><div class="empty-icon">+</div><h4>No bounties yet</h4><p>Be the first organization to post a reward.</p><a class="btn btn-amber btn-sm" href="#createPanel">Create the first bounty</a></div>`;
+        return;
+      }
+
+      const results = [];
+      let open = 0;
+      let totalRewards = ethers.BigNumber.from(0);
+
+      for (let i = 0; i < count; i++) {
+        const b = await contract.getBounty(i);
+        const item = {
+          id: b[0],
+          title: b[1],
+          description: b[2],
+          reward: b[3],
+          organization: b[4],
+          researcher: b[5],
+          reportHash: b[6],
+          status: b[7]
+        };
+        results.push(item);
+        if (Number(item.status) === 0) open++;
+        if (Number(item.status) !== 2) totalRewards = totalRewards.add(item.reward);
+      }
+
+      $("openBounties").textContent = open;
+      $("totalRewards").textContent = ethers.utils.formatEther(totalRewards) + " ETH";
+
+      $("bountyList").innerHTML = results.reverse().map((b, i) => renderBounty(b, i)).join("");
+      setStatus("Loaded " + count + " bounty" + (count === 1 ? "" : "ies") + " from the blockchain.", "success");
+    } catch (error) {
+      setStatus("Could not read bounties: " + (error?.reason || error?.message || error), "error");
+    }
+  }
+
+  function renderBounty(b, i = 0) {
+    const id = b.id.toString();
+    const delay = Math.min((Number(i) || 0) * 80, 800);
+    const status = statusName(b.status);
+    const mineIsOrg = userAddress &&
+      b.organization.toLowerCase() === userAddress.toLowerCase();
+
+    const submitted = status === "Submitted";
+    const open = status === "Open";
+
+    return `
+      <article class="bounty" style="animation-delay:${delay}ms">
+        <div class="bounty-top">
+          <div>
+            <h4>${escapeHtml(b.title || "Untitled bounty")}</h4>
+            <div class="bounty-id">Bounty #${id} · Organization ${escapeHtml(shortAddress(b.organization))}</div>
+          </div>
+          <div class="reward">${escapeHtml(ethers.utils.formatEther(b.reward))} ETH</div>
+        </div>
+
+        <div class="meta">
+          <span class="tag ${statusClass(b.status)}">${status}</span>
+          ${open ? `<span class="tag">First report wins</span>` : ""}
+          ${b.researcher !== ethers.constants.AddressZero
+            ? `<span class="tag">Researcher ${escapeHtml(shortAddress(b.researcher))}</span>`
+            : ""}
+          ${mineIsOrg ? `<span class="tag">You are organization</span>` : ""}
+        </div>
+
+        <div class="desc">${escapeHtml(b.description || "No description provided.")}</div>
+
+        ${submitted ? `
+          <div class="field-hint" style="margin-bottom:12px;">
+            Report hash: <strong>${escapeHtml(b.reportHash || "—")}</strong>
+          </div>` : ""}
+
+        <div class="bounty-actions">
+          ${open && !mineIsOrg ? `
+            <button class="btn btn-line btn-sm" onclick="openReportModal(${id})">
+              Submit report
+            </button>` : ""}
+          ${open && mineIsOrg ? `
+            <span class="field-hint" style="margin:0;">This is your bounty — submit reports from a researcher wallet.</span>` : ""}
+
+          ${submitted && mineIsOrg ? `
+            <button class="btn btn-green btn-sm" onclick="resolveBounty(${id}, true)">
+              Accept &amp; pay
+            </button>
+            <button class="btn btn-line btn-sm" onclick="resolveBounty(${id}, false)">
+              Reject
+            </button>` : ""}
+        </div>
+      </article>`;
+  }
+
+  async function createBounty() {
+    if (!contract) return setStatus("Connect MetaMask first.", "info");
+
+    const title = $("title").value.trim();
+    const description = $("description").value.trim();
+    const reward = $("reward").value.trim();
+
+    if (!title) return setStatus("Enter a bounty title.", "error");
+    if (!description) return setStatus("Enter a vulnerability description.", "error");
+    if (!reward || Number(reward) <= 0) return setStatus("Enter an ETH reward greater than 0.", "error");
+
+    const btn = $("createBtn");
+    btn.disabled = true;
+    try {
+      setStatus("Creating bounty… confirm the transaction in MetaMask.", "info");
+      const tx = await contract.createBounty(title, description, {
+        value: ethers.utils.parseEther(reward)
+      });
+
+      setStatus("Transaction submitted: " + tx.hash, "info");
+      await tx.wait();
+
+      $("title").value = "";
+      $("description").value = "";
+      $("reward").value = "";
+
+      setStatus("Bounty created successfully. Reward is locked in the contract.", "success");
+      await loadBounties();
+    } catch (error) {
+      setStatus("Create failed: " + (error?.reason || error?.data?.message || error?.message || error), "error");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function openReportModal(id) {
+    selectedReportBountyId = id;
+    $("modalBountyId").textContent = id;
+    $("modalReportHash").value = "";
+    $("reportModal").classList.add("show");
+    setTimeout(() => $("modalReportHash").focus(), 50);
+  }
+
+  function closeReportModal() {
+    $("reportModal").classList.remove("show");
+    selectedReportBountyId = null;
+  }
+
+  async function submitReport(id, hash) {
+    if (!contract) return setStatus("Connect MetaMask first.", "info");
+    if (!Number.isInteger(Number(id)) || Number(id) < 0) return setStatus("Enter a valid bounty ID.", "error");
+    if (!hash) return setStatus("Enter a report hash.", "error");
+
+    try {
+      setStatus("Submitting report… confirm in MetaMask.", "info");
+      const tx = await contract.submitReport(id, hash);
+      setStatus("Transaction submitted: " + tx.hash, "info");
+      await tx.wait();
+      closeReportModal();
+      setStatus("Report submitted successfully.", "success");
+      await loadBounties();
+    } catch (error) {
+      const raw = (error?.reason || error?.data?.message || error?.message || String(error));
+      if (String(raw).includes("Organization cannot submit report")) {
+        setStatus("You created this bounty — you can't report on your own bounty. Switch accounts in MetaMask and submit from a researcher wallet.", "error");
+      } else {
+        setStatus("Report submission failed: " + raw, "error");
+      }
+    }
+  }
+
+  async function resolveBounty(id, accepted) {
+    if (!contract) return setStatus("Connect MetaMask first.", "info");
+    if (!Number.isInteger(Number(id)) || Number(id) < 0) return setStatus("Invalid bounty ID.", "error");
+
+    const action = accepted ? "accept and pay" : "reject and refund";
+    if (!confirm("Are you sure you want to " + action + " bounty #" + id + "?")) return;
+
+    try {
+      setStatus("Resolving bounty… confirm in MetaMask.", "info");
+      const tx = await contract.resolveBounty(id, accepted);
+      setStatus("Transaction submitted: " + tx.hash, "info");
+      await tx.wait();
+      setStatus(
+        accepted
+          ? "Bounty accepted. The reward has been transferred to the researcher."
+          : "Bounty rejected. Reward refunded to organization.",
+        "success"
+      );
+      await loadBounties();
+    } catch (error) {
+      setStatus("Resolution failed: " + (error?.reason || error?.data?.message || error?.message || error), "error");
+    }
+  }
+
+  $("connectBtn").addEventListener("click", connect);
+  $("refreshBtn").addEventListener("click", loadBounties);
+  $("refreshTopBtn").addEventListener("click", loadBounties);
+  $("createBtn").addEventListener("click", createBounty);
+
+  $("submitReportBtn").addEventListener("click", () => {
+    const id = Number($("reportBountyId").value);
+    const hash = $("reportHash").value.trim();
+
+    if (!Number.isInteger(id) || id < 0) {
+      return setStatus("Enter a valid bounty ID.", "error");
+    }
+    submitReport(id, hash);
+  });
+
+  $("closeModalBtn").addEventListener("click", closeReportModal);
+
+  $("modalSubmitBtn").addEventListener("click", () => {
+    const hash = $("modalReportHash").value.trim();
+    if (selectedReportBountyId === null) return;
+    submitReport(selectedReportBountyId, hash);
+  });
+
+  $("reportModal").addEventListener("click", (event) => {
+    if (event.target === $("reportModal")) closeReportModal();
+  });
+
+  // Duplicate reload listeners removed — graceful chainChanged/accountsChanged handlers above already reconnect.
+</script>
+</body>
+</html>

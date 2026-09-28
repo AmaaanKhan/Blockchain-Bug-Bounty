@@ -1,90 +1,166 @@
-# Blockchain Bug Bounty Platform
+# BugShield — Decentralized Bug Bounty Platform
 
-A blockchain-based bug bounty platform implemented as a Solidity smart contract.
+BugShield is a Web3 bug bounty DApp built with Solidity and a browser frontend. Organizations can create on-chain bounties with ETH rewards, researchers can submit report hashes, and the organization can accept or reject a submitted report.
 
-## Features
+## Tech Stack
 
-- Create bug bounties with ETH rewards
-- Store bounty title and vulnerability description on-chain
-- Submit vulnerability reports using a report hash
-- Track bounty status
-- Restrict bounty resolution to the organization that created it
-- Automatically transfer rewards when reports are accepted
-- Emit blockchain events for bounty creation, report submission, and resolution
-
-## Bounty Lifecycle
-
-Organization creates bounty
-→ Researcher submits report
-→ Organization accepts or rejects report
-→ Bounty is resolved
-→ Reward is transferred if accepted
-
-## Smart Contract
-
-```text
-contracts/
-└── BugBounty.sol
-```
-
-## Main Functions
-
-- `createBounty()` — creates a bounty and locks the ETH reward
-- `submitReport()` — submits a vulnerability report hash
-- `resolveBounty()` — accepts or rejects a submitted report
-- `getBounty()` — retrieves bounty information
-
-## Bounty States
-
-- Open
-- Submitted
-- Resolved
-
-## Technology
-
-- Solidity
+- Solidity `^0.8.20`
 - Ethereum-compatible blockchain
+- MetaMask
+- Sepolia Test Network
 - Remix IDE
-- Remix VM / local blockchain
-
-## Testing
-
-The complete bounty lifecycle has been tested using Remix VM:
-
-1. An organization creates a bounty with an ETH reward.
-2. A separate account submits a vulnerability report.
-3. The organization accepts the report.
-4. The bounty is marked as resolved.
-5. The reward is transferred to the researcher.
-
-## Running/Screenshots
-
-CREATE BOUNTY
-<img width="1907" height="1012" alt="Screenshot 2026-09-23 060014" src="https://github.com/user-attachments/assets/dd7829e9-3fd1-4443-b0f1-5a8668b2f89b" />
-
-SET REWARD
-<img width="1917" height="1017" alt="Screenshot 2026-09-23 055947" src="https://github.com/user-attachments/assets/29d79193-dc98-4098-b2bf-017249e83510" />
-
-SUBMIT SOLUTION
-<img width="1917" height="1016" alt="Screenshot 2026-09-23 060535" src="https://github.com/user-attachments/assets/c1e8c472-6aea-460f-8cd4-247659be5252" />
-
-ACCEPT SOLUTION (WILL RELEASE REWARD)
-<img width="1916" height="1010" alt="Screenshot 2026-09-23 060906" src="https://github.com/user-attachments/assets/7d7e912f-50cc-47dd-9f3f-39503d117fd1" />
-
-ACCOUNT BALANCE 94.99 (-5) AFTER RELEASING PAYMENT
-<img width="1917" height="1017" alt="Screenshot 2026-09-23 060302" src="https://github.com/user-attachments/assets/2a71f7f2-92e3-418e-944a-bbd96d758492" />
-
+- HTML / CSS / JavaScript
+- ethers.js 5.7.2
 
 ## Project Structure
 
 ```text
-Blockchain-Bug-Bounty/
+Blockchain-Bug-Bounty-main/
 ├── contracts/
 │   └── BugBounty.sol
+├── Frontend/
+│   ├── index.html
+│   ├── how-it-works.html
+│   ├── app.html
+│   ├── run.bat
+│   ├── set-contract.bat
+│   ├── set_contract.py
+│   ├── README.md
+│   └── ...
 ├── .gitignore
 └── README.md
 ```
 
-## Scope
+## Smart Contract Workflow
 
-This project focuses on the blockchain smart-contract layer of a bug bounty platform, providing transparent bounty creation, vulnerability report submission, bounty resolution, and automated reward distribution.
+```text
+Organization
+    │
+    ▼
+Create Bounty + ETH reward
+    │
+    ▼
+Bounty: Open
+    │
+    ▼
+Researcher submits report hash
+    │
+    ▼
+Bounty: Submitted
+    │
+    ▼
+Organization resolves report
+    │
+    ├── Accepted → reward transferred to researcher
+    └── Rejected → reward refunded to the organization
+
+An organization can also cancel its own `Open` bounty at any time; the locked reward is refunded.
+```
+
+## Smart Contract Functions
+
+- `createBounty(string,string)` — creates a bounty and locks the ETH reward. Title, description, and a non-zero reward are required.
+- `submitReport(uint256,string)` — submits a report hash for an open bounty. The organization cannot report on its own bounty, and the hash cannot be empty.
+- `resolveBounty(uint256,bool)` — organization accepts or rejects a submitted report. Accepting pays the researcher; rejecting refunds the organization. Protected against reentrancy.
+- `cancelBounty(uint256)` — organization cancels its own open bounty and gets the locked reward refunded.
+- `getBounty(uint256)` — reads complete bounty information. Reverts for unknown bounty IDs.
+- `bountyCount()` — returns the number of created bounties.
+- `bounties(uint256)` — public mapping getter for a bounty.
+
+## Network
+
+The frontend is configured for **Sepolia Test Network**.
+
+- Chain ID: `11155111`
+- Hex Chain ID: `0xaa36a7`
+
+The frontend detects network changes and asks MetaMask to switch back to Sepolia when required.
+
+## Run the Frontend
+
+### Windows — easiest method
+
+Open the `Frontend` folder and double-click:
+
+```text
+run.bat
+```
+
+`run.bat` first shows the currently configured contract address then asks for a new one:
+
+- Paste a new `0x...` contract address + Enter to replace, save, and start.
+- Press Enter with empty input to keep the current address and just start.
+- Invalid input is rejected and asked again (up to 10 tries).
+
+The launcher automatically tries the available local server option in this order:
+
+1. Python `py`
+2. Python `python`
+3. Node.js / `npx`
+
+It starts the server on port `8000` and opens:
+
+```text
+http://localhost:8000/
+```
+
+A local HTTP server is recommended because browser wallets such as MetaMask may not work correctly with a `file://` page.
+
+### Manual method
+
+If Python is installed:
+
+```powershell
+cd Frontend
+python -m http.server 8000
+```
+
+Then open `http://localhost:8000/`.
+
+## MetaMask Setup
+
+1. Install/unlock MetaMask.
+2. Enable Sepolia test network.
+3. Make sure the wallet has Sepolia test ETH for transaction fees and bounty rewards.
+4. Open the BugShield frontend.
+5. Click **Connect MetaMask**.
+6. Keep MetaMask on Sepolia.
+
+## Deploying the Contract
+
+1. Open `contracts/BugBounty.sol` in Remix.
+2. Compile with Solidity `0.8.20` or another compatible `0.8.x` compiler.
+3. In Remix, select **Injected Provider - MetaMask**.
+4. Make sure MetaMask is on Sepolia.
+5. Deploy `BugBounty`.
+6. Copy the deployed contract address.
+7. Run `Frontend/run.bat`, paste the address when asked, and press Enter — it replaces `CONTRACT_ADDRESS` in `Frontend/app.html`, saves, and starts the server. (Manual alternative: edit `CONTRACT_ADDRESS` in `app.html` yourself.)
+
+The contract address and a transaction hash are different values:
+
+- **Contract address:** identifies the deployed smart contract.
+- **Transaction hash:** identifies one blockchain transaction.
+
+## Bounty Testing
+
+A normal test flow is:
+
+1. Connect MetaMask.
+2. Create a bounty and send an ETH reward.
+3. Read the created bounty from the live contract.
+4. Switch MetaMask to a different account (researcher) to submit a report hash. The organization account cannot report on its own bounty.
+5. Return to the organization wallet.
+6. Resolve the submitted bounty.
+7. If accepted, the contract transfers the locked reward to the researcher. If rejected, the reward is refunded to the organization.
+
+## Security Notes
+
+- Never put a MetaMask private key or seed phrase in this repository.
+- Never commit `.env` files containing secrets.
+- This project uses Sepolia test ETH; do not treat testnet funds as real funds.
+
+## Frontend Pages
+
+- `index.html` — BugShield landing page.
+- `how-it-works.html` — explains the on-chain bounty workflow.
+- `app.html` — live DApp interface for connecting MetaMask, creating bounties, submitting reports, and resolving bounties.
